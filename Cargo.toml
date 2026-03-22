@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "crates/ahealth-ingest",
+    "crates/ahealth-api",
+    "crates/ahealth-console",
+    "crates/ahealth-mqtt",
+    # shared libraries
+    # "libs/ahealth-common",
+]
+
+# Workspace-level dependency declarations — pin versions here, reference with
+# { workspace = true } in member Cargo.toml files to keep versions in sync.
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"
+thiserror = "2"
