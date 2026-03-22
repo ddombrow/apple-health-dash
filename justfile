@@ -30,6 +30,22 @@ fmt-check:
     cargo fmt --all -- --check
 
 # ---------------------------------------------------------------------------
+# Dev (all services via Overmind)
+# ---------------------------------------------------------------------------
+
+# Start all services defined in Procfile
+dev:
+    overmind start
+
+# Restart a single service, e.g: just restart ingest
+restart service:
+    overmind restart {{service}}
+
+# Attach to a service's tmux pane, e.g: just connect ingest
+connect service:
+    overmind connect {{service}}
+
+# ---------------------------------------------------------------------------
 # ahealth-ingest (MQTT collector)
 # ---------------------------------------------------------------------------
 
