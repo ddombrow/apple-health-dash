@@ -1,0 +1,216 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ahealth-api",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint.",
+        "operationId": "health_check",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/mileage/daily": {
+      "get": {
+        "summary": "Returns total walking/running distance grouped by day, newest first.",
+        "operationId": "daily_mileage",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_DailyMileageRow",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DailyMileageRow"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/mileage/from-date": {
+      "get": {
+        "summary": "Returns total walking/running distance from a given date to now.",
+        "operationId": "mileage_from_date",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "description": "Start date in YYYY-MM-DD format (inclusive).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FromDateMileageResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/mileage/weekly": {
+      "get": {
+        "summary": "Returns total walking/running distance grouped by week (Monday start), newest first.",
+        "operationId": "weekly_mileage",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_WeeklyMileageRow",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeeklyMileageRow"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DailyMileageRow": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "description": "Date in YYYY-MM-DD format.",
+            "type": "string"
+          },
+          "miles": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "day",
+          "miles"
+        ]
+      },
+      "Error": {
+        "description": "Error information from a response.",
+        "type": "object",
+        "properties": {
+          "error_code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "request_id"
+        ]
+      },
+      "FromDateMileageResponse": {
+        "type": "object",
+        "properties": {
+          "miles": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "miles"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "WeeklyMileageRow": {
+        "type": "object",
+        "properties": {
+          "miles": {
+            "type": "number",
+            "format": "double"
+          },
+          "week": {
+            "description": "Week start date (Monday) in YYYY-MM-DD format.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "miles",
+          "week"
+        ]
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

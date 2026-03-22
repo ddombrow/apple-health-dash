@@ -1,0 +1,5 @@
+openapi_spec_path = "openapi.json"
+server_bind_ip    = "127.0.0.1"
+server_bind_port  = 8080
+clickhouse_host   = "localhost"
+clickhouse_port   = 8123

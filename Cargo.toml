@@ -3,7 +3,7 @@ resolver = "2"
 
 members = [
     "crates/ahealth-ingest",
-    # "crates/ahealth-api",
+    "crates/ahealth-api",
     # "crates/ahealth-console",
     # "crates/ahealth-mqtt",
     # "crates/ahealth-mcp",

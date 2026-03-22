@@ -41,13 +41,6 @@ dev:
 dev-wake:
     caffeinate -is overmind start
 
-# Start or reattach to Zellij session
-dev-zellij:
-    zellij list-sessions 2>/dev/null | grep -q apple-health-dash && zellij attach apple-health-dash || zellij -s apple-health-dash -n .zellij/dev.kdl
-
-# Start or reattach to Zellij session, preventing system/idle sleep
-dev-zellij-wake:
-    caffeinate -is sh -c 'zellij list-sessions 2>/dev/null | grep -q apple-health-dash && zellij attach apple-health-dash || zellij -s apple-health-dash -n .zellij/dev.kdl'
 
 # Restart a single service, e.g: just restart ingest
 restart service:
@@ -66,6 +59,19 @@ ingest:
 
 ingest-release:
     cargo run -p ahealth-ingest --release
+
+# ---------------------------------------------------------------------------
+# ahealth-api (Dropshot REST API)
+# ---------------------------------------------------------------------------
+
+api:
+    CONFIG_PATH={{justfile_directory()}}/crates/ahealth-api/config.toml cargo run -p ahealth-api --bin ahealth-api
+
+api-release:
+    CONFIG_PATH={{justfile_directory()}}/crates/ahealth-api/config.toml cargo run -p ahealth-api --bin ahealth-api --release
+
+api-docs:
+    CONFIG_PATH={{justfile_directory()}}/crates/ahealth-api/config.toml cargo run -p ahealth-api --bin docs
 
 # ---------------------------------------------------------------------------
 # Frontend (ahealth-console)

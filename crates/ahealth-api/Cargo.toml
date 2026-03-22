@@ -1,0 +1,20 @@
+[package]
+name = "ahealth-api"
+version = "0.1.0"
+edition = "2024"
+default-run = "ahealth-api"
+
+[dependencies]
+# workspace-managed
+serde = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+
+# crate-specific
+dropshot = "0.13"
+schemars = "0.8"
+clickhouse = "0.13"
+time = { version = "0.3", features = ["serde"] }
+semver = "1"
+toml = "0.8"
+axum = "0.8"
