@@ -135,7 +135,7 @@ async fn main() {
         .expect("Failed to subscribe");
 
     info!("Connected to {BROKER}:{PORT}, subscribed to '{TOPIC}'");
-    info!("Writing messages to ./{OUTPUT_DIR}/");
+    //info!("Writing messages to ./{OUTPUT_DIR}/");
 
     loop {
         match eventloop.poll().await {
