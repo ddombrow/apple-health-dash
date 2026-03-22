@@ -6,6 +6,7 @@ members = [
     # "crates/ahealth-api",
     # "crates/ahealth-console",
     # "crates/ahealth-mqtt",
+    # "crates/ahealth-mcp",
     # shared libraries
     # "libs/ahealth-common",
 ]

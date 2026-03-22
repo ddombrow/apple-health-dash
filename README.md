@@ -31,11 +31,16 @@ flowchart LR
         FE["Frontend\n(TypeScript)"]
     end
 
+    subgraph MCP
+        AMCP["ahealth-mcp\nMCP server"]
+    end
+
     AH -->|"MQTT publish\nahealth/#"| MQTT
     MQTT -->|"MQTT subscribe"| ING
     ING -->|"insert rows"| CH
     CH -->|"query"| APID
     APID -->|"JSON API"| AXM
+    APID -->|"JSON API"| AMCP
     AXM -->|"serves"| FE
 ```
 
@@ -47,6 +52,7 @@ flowchart LR
 | `ahealth-ingest` | Subscribes to MQTT, writes health metrics to ClickHouse |
 | `ahealth-api` | Dropshot HTTP API over ClickHouse |
 | `ahealth-console` | Axum server + TypeScript dashboard frontend |
+| `ahealth-mcp` | MCP server exposing health data to LLM clients via `ahealth-api` |
 
 ## Development
 
