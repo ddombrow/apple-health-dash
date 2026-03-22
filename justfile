@@ -33,9 +33,21 @@ fmt-check:
 # Dev (all services via Overmind)
 # ---------------------------------------------------------------------------
 
-# Start all services defined in Procfile
+# Start all services via Overmind (tmux)
 dev:
     overmind start
+
+# Start all services via Overmind, preventing system/idle sleep
+dev-wake:
+    caffeinate -is overmind start
+
+# Start or reattach to Zellij session
+dev-zellij:
+    zellij list-sessions 2>/dev/null | grep -q apple-health-dash && zellij attach apple-health-dash || zellij -s apple-health-dash -n .zellij/dev.kdl
+
+# Start or reattach to Zellij session, preventing system/idle sleep
+dev-zellij-wake:
+    caffeinate -is sh -c 'zellij list-sessions 2>/dev/null | grep -q apple-health-dash && zellij attach apple-health-dash || zellij -s apple-health-dash -n .zellij/dev.kdl'
 
 # Restart a single service, e.g: just restart ingest
 restart service:
