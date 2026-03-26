@@ -1,0 +1,46 @@
+@layer base, components, utilities;
+
+@import 'tailwindcss';
+
+@import '@oxide/design-system/styles/tailwind.css';
+@import '@oxide/design-system/styles/main.css';
+@import '@oxide/design-system/styles/dark.css';
+@import '@oxide/design-system/styles/light.css';
+@import '@oxide/design-system/styles/preflight.css' layer(base);
+@import '@oxide/design-system/components/button.css' layer(components);
+@import '@oxide/design-system/components/asciidoc.css';
+
+@source '../../node_modules/@oxide/design-system/dist';
+
+@layer base {
+  body {
+    @apply text-default bg-default font-sans;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    @apply text-raise;
+  }
+}
+
+@layer components {
+  .asciidoc-body h1 {
+    @apply relative mb-3 mt-10 text-sans-2xl;
+  }
+
+  .asciidoc-body h2 {
+    @apply text-sans-xl;
+  }
+
+  .asciidoc-body h3 {
+    @apply text-sans-lg;
+  }
+
+  .asciidoc-body h4,
+  .asciidoc-body h5 {
+    @apply text-sans-md;
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 92,
+  "singleQuote": true,
+  "semi": false,
+  "trailingComma": "es5",
+  "experimentalTailwindcss": {},
+  "experimentalSortImports": {
+    "internalPattern": ["~/", "app/"],
+    "partitionByComment": true,
+    "customGroups": [],
+    "groups": ["builtin", "external", "internal", ["parent", "sibling", "index"], "unknown"]
+  },
+  "experimentalSortPackageJson": false,
+  "ignorePatterns": ["dist/**", "coverage/**", "mockServiceWorker.js"]
+}

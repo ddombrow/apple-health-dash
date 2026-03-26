@@ -1,1 +1,7 @@
 /target
+.DS_Store
+/crates/ahealth-api/config.toml
+/console/node_modules
+/console/dist
+/console/mockServiceWorker.js
+/console/*.tsbuildinfo

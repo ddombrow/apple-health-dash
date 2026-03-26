@@ -77,7 +77,7 @@ api-docs:
 # Frontend (ahealth-console)
 # ---------------------------------------------------------------------------
 
-frontend-dir := "crates/ahealth-console/frontend"
+frontend-dir := "console"
 
 frontend-install:
     npm install --prefix {{frontend-dir}}
