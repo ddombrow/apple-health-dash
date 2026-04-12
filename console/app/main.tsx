@@ -19,7 +19,9 @@ if (process.env.SHA) {
 const root = createRoot(document.getElementById('root')!)
 
 function render() {
-  const router = createBrowserRouter(routes)
+  const router = createBrowserRouter(routes, {
+    basename: import.meta.env.PROD ? '/console' : undefined,
+  })
 
   root.render(
     <StrictMode>

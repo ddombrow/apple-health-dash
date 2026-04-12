@@ -5,3 +5,6 @@
 /console/dist
 /console/mockServiceWorker.js
 /console/*.tsbuildinfo
+/.venv
+__pycache__/
+*.pyc

@@ -12,6 +12,7 @@
     "dev": "API_MODE=msw vite",
     "preview": "API_MODE=msw npm run build && cp mockServiceWorker.js dist/ && vite preview",
     "build": "vite build",
+    "build:watch": "vite build --watch",
     "ci": "npm run tsc && npm run lint && npm run fmt:check && npm run test run && npm run e2ec",
     "tsc": "tsgo",
     "test": "NODE_OPTIONS='--no-deprecation' vitest",
