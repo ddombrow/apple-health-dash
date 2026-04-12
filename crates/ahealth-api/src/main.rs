@@ -13,6 +13,12 @@ struct AppContext {
     ch: Client,
 }
 
+#[derive(Deserialize, JsonSchema)]
+struct OnDateParams {
+    /// Date in YYYY-MM-DD format.
+    date: String,
+}
+
 // --- /health ---
 
 #[derive(Serialize, JsonSchema)]
@@ -141,6 +147,50 @@ async fn mileage_from_date(
     Ok(HttpResponseOk(row))
 }
 
+// --- /workouts/on-date ---
+
+#[derive(clickhouse::Row, serde::Deserialize)]
+struct WorkoutTypeRow {
+    name: String,
+}
+
+#[derive(Serialize, JsonSchema)]
+struct WorkoutsOnDateResponse {
+    /// Date in YYYY-MM-DD format.
+    date: String,
+    workout_types: Vec<String>,
+}
+
+/// Returns the distinct workout types performed on a given date.
+#[endpoint {
+    method = GET,
+    path = "/workouts/on-date",
+}]
+async fn workouts_on_date(
+    rqctx: RequestContext<Arc<AppContext>>,
+    query: Query<OnDateParams>,
+) -> Result<HttpResponseOk<WorkoutsOnDateResponse>, HttpError> {
+    let ch = &rqctx.context().ch;
+    let date = query.into_inner().date;
+
+    let rows = ch
+        .query(
+            "SELECT DISTINCT name
+             FROM ahealth_workouts FINAL
+             WHERE toDate(started_at) = toDate(?)
+             ORDER BY name ASC",
+        )
+        .bind(&date)
+        .fetch_all::<WorkoutTypeRow>()
+        .await
+        .map_err(|e| HttpError::for_internal_error(e.to_string()))?;
+
+    Ok(HttpResponseOk(WorkoutsOnDateResponse {
+        date,
+        workout_types: rows.into_iter().map(|row| row.name).collect(),
+    }))
+}
+
 // --- server setup ---
 
 #[tokio::main]
@@ -162,6 +212,7 @@ async fn main() -> anyhow::Result<()> {
     api.register(daily_mileage).unwrap();
     api.register(weekly_mileage).unwrap();
     api.register(mileage_from_date).unwrap();
+    api.register(workouts_on_date).unwrap();
 
     let mut f = std::fs::File::create(&cfg.openapi_spec_path)?;
     api.openapi("ahealth-api", semver::Version::new(0, 1, 0)).write(&mut f)?;

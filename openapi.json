@@ -119,6 +119,41 @@
           }
         }
       }
+    },
+    "/workouts/on-date": {
+      "get": {
+        "summary": "Returns the distinct workout types performed on a given date.",
+        "operationId": "workouts_on_date",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "description": "Date in YYYY-MM-DD format.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutsOnDateResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -197,6 +232,25 @@
         "required": [
           "miles",
           "week"
+        ]
+      },
+      "WorkoutsOnDateResponse": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "description": "Date in YYYY-MM-DD format.",
+            "type": "string"
+          },
+          "workout_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "workout_types"
         ]
       }
     },

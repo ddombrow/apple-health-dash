@@ -28,6 +28,37 @@ struct MetricRow {
     source: String,
 }
 
+#[derive(Row, Serialize)]
+struct WorkoutRow {
+    topic: String,
+    #[serde(with = "clickhouse::serde::time::datetime64::micros")]
+    ingested_at: OffsetDateTime,
+    workout_id: String,
+    name: String,
+    location: String,
+    is_indoor: bool,
+    #[serde(with = "clickhouse::serde::time::datetime64::micros")]
+    started_at: OffsetDateTime,
+    #[serde(with = "clickhouse::serde::time::datetime64::micros")]
+    ended_at: OffsetDateTime,
+    duration_seconds: f64,
+    distance_qty: f64,
+    distance_units: String,
+    speed_qty: f64,
+    speed_units: String,
+    elevation_up_qty: f64,
+    elevation_up_units: String,
+    humidity_qty: f64,
+    humidity_units: String,
+    intensity_qty: f64,
+    intensity_units: String,
+    temperature_qty: f64,
+    temperature_units: String,
+    active_energy_burned_qty: f64,
+    active_energy_burned_units: String,
+    metadata_json: String,
+}
+
 fn parse_date(s: &str) -> Option<OffsetDateTime> {
     let dt = DateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S %z").ok()?;
     OffsetDateTime::from_unix_timestamp(dt.timestamp()).ok()
@@ -92,6 +123,109 @@ async fn insert_metrics(client: &Client, topic: &str, ingested_at_us: u128, payl
     }
 }
 
+fn nested_qty(value: &Value, key: &str) -> f64 {
+    value
+        .get(key)
+        .and_then(|field| field.get("qty"))
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0)
+}
+
+fn nested_units(value: &Value, key: &str) -> String {
+    value
+        .get(key)
+        .and_then(|field| field.get("units"))
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string()
+}
+
+async fn insert_workouts(
+    client: &Client,
+    topic: &str,
+    ingested_at_us: u128,
+    payload: &Value,
+) -> usize {
+    let workouts = match payload.pointer("/data/workouts") {
+        Some(Value::Array(w)) => w,
+        _ => return 0,
+    };
+
+    let ingested_at = us_to_offset(ingested_at_us);
+    let mut rows: Vec<WorkoutRow> = Vec::new();
+
+    for workout in workouts {
+        let workout_id = match workout["id"].as_str() {
+            Some(id) => id,
+            None => continue,
+        };
+        let started_at = match workout["start"].as_str().and_then(parse_date) {
+            Some(dt) => dt,
+            None => continue,
+        };
+        let ended_at = match workout["end"].as_str().and_then(parse_date) {
+            Some(dt) => dt,
+            None => continue,
+        };
+
+        rows.push(WorkoutRow {
+            topic: topic.to_string(),
+            ingested_at,
+            workout_id: workout_id.to_string(),
+            name: workout["name"].as_str().unwrap_or("").to_string(),
+            location: workout["location"].as_str().unwrap_or("").to_string(),
+            is_indoor: workout["isIndoor"].as_bool().unwrap_or(false),
+            started_at,
+            ended_at,
+            duration_seconds: workout["duration"].as_f64().unwrap_or(0.0),
+            distance_qty: nested_qty(workout, "distance"),
+            distance_units: nested_units(workout, "distance"),
+            speed_qty: nested_qty(workout, "speed"),
+            speed_units: nested_units(workout, "speed"),
+            elevation_up_qty: nested_qty(workout, "elevationUp"),
+            elevation_up_units: nested_units(workout, "elevationUp"),
+            humidity_qty: nested_qty(workout, "humidity"),
+            humidity_units: nested_units(workout, "humidity"),
+            intensity_qty: nested_qty(workout, "intensity"),
+            intensity_units: nested_units(workout, "intensity"),
+            temperature_qty: nested_qty(workout, "temperature"),
+            temperature_units: nested_units(workout, "temperature"),
+            active_energy_burned_qty: nested_qty(workout, "activeEnergyBurned"),
+            active_energy_burned_units: nested_units(workout, "activeEnergyBurned"),
+            metadata_json: serde_json::to_string(&workout["metadata"])
+                .unwrap_or_else(|_| "{}".to_string()),
+        });
+    }
+
+    if rows.is_empty() {
+        return 0;
+    }
+
+    let count = rows.len();
+    let mut insert = match client.insert("ahealth_workouts") {
+        Ok(i) => i,
+        Err(e) => {
+            error!("Workout insert init error: {e}");
+            return 0;
+        }
+    };
+
+    for row in &rows {
+        if let Err(e) = insert.write(row).await {
+            error!("Workout write error: {e}");
+            return 0;
+        }
+    }
+
+    match insert.end().await {
+        Ok(_) => count,
+        Err(e) => {
+            error!("Workout insert commit error: {e}");
+            0
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
@@ -120,6 +254,39 @@ async fn main() {
     .execute()
     .await
     .expect("Failed to initialize schema");
+
+    ch.query(
+        "CREATE TABLE IF NOT EXISTS ahealth_workouts (
+            topic                      String,
+            ingested_at                DateTime64(6, 'UTC'),
+            workout_id                 String,
+            name                       String,
+            location                   String,
+            is_indoor                  Bool,
+            started_at                 DateTime64(6, 'UTC'),
+            ended_at                   DateTime64(6, 'UTC'),
+            duration_seconds           Float64,
+            distance_qty               Float64,
+            distance_units             String,
+            speed_qty                  Float64,
+            speed_units                String,
+            elevation_up_qty           Float64,
+            elevation_up_units         String,
+            humidity_qty               Float64,
+            humidity_units             String,
+            intensity_qty              Float64,
+            intensity_units            String,
+            temperature_qty            Float64,
+            temperature_units          String,
+            active_energy_burned_qty   Float64,
+            active_energy_burned_units String,
+            metadata_json              String DEFAULT '{}'
+        ) ENGINE = ReplacingMergeTree()
+        ORDER BY (workout_id, started_at)",
+    )
+    .execute()
+    .await
+    .expect("Failed to initialize workout schema");
 
     info!("Schema ready");
 
@@ -169,13 +336,23 @@ async fn main() {
                 //     Err(e) => error!("Failed to write {filename}: {e}"),
                 // }
 
-                if topic == "ahealth/metrics" {
+                if payload.pointer("/data/metrics").is_some() {
                     let ch = ch.clone();
                     let topic_clone = topic.clone();
                     let payload_clone = payload.clone();
                     tokio::spawn(async move {
                         let inserted = insert_metrics(&ch, &topic_clone, ts, &payload_clone).await;
                         info!(inserted, "Inserted rows into ahealth_metrics");
+                    });
+                }
+
+                if payload.pointer("/data/workouts").is_some() {
+                    let ch = ch.clone();
+                    let topic_clone = topic.clone();
+                    let payload_clone = payload.clone();
+                    tokio::spawn(async move {
+                        let inserted = insert_workouts(&ch, &topic_clone, ts, &payload_clone).await;
+                        info!(inserted, "Inserted rows into ahealth_workouts");
                     });
                 }
             }
